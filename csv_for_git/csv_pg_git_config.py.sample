@@ -1,0 +1,12 @@
+import os
+
+os.environ['PG_GIT_DBHOST'] = '192.168.1.10'  # IP сервера БД
+os.environ['PG_GIT_DBNAME'] = 'dbname'        # Имя БД
+os.environ['PG_GIT_DBUSER'] = 'dbuser'        # Пользователь
+os.environ['PG_GIT_DBPASS'] = 'dbpassword'    # Пароль
+os.environ['PG_GIT_DBPORT'] = '5432'          # Порт
+
+os.environ['PG_GIT_DIRNAME_BASE'] = ''                      # Базовая директория для хранения структуры файлов. '' - Директория с python-скриптом
+os.environ['PG_GIT_DIRNAME_PROC'] = 'pg_proc_history'       # Директория с файлами функций/процедурами
+os.environ['PG_GIT_DIRNAME_VIEWS'] = 'pg_views_history'     # Директория с файлами Представлений
+os.environ['PG_GIT_DIRNAME_TABLES'] = 'pg_tables_history'   # Директория с файлами структур таблиц
