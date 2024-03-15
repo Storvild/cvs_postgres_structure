@@ -286,6 +286,12 @@ def test():
     print(get_pg_version_short())
     print(get_pg_version_major())
     print(get_pg_server_encoding())  #UTF8
+    for item in get_views():
+        print(item)
+    for item in get_proc():
+        print(item)
+    for item in get_tables():
+        print(item)
 
 
 def main():
