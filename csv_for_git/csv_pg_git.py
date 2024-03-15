@@ -220,10 +220,18 @@ ORDER BY m.schema_name, m.relkind, m.table_name
 
 
 def save_files_proc():
-    save_path = os.path.join(DIRNAME_BASE, DIRNAME_PROC)
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
     for item in get_proc():
+        schema_name = item[4]
+        save_path = DIRNAME_BASE
+        if DIRNAME_BY_DBNAME.lower() == 'true':
+            save_path = os.path.join(save_path, DBNAME)
+        if DIRNAME_BY_SCHEMA.lower() == 'true':
+            save_path = os.path.join(save_path, schema_name)
+        save_path = os.path.join(save_path, DIRNAME_PROC)
+
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
         filepath = os.path.join(save_path, '{}_[{}].sql'.format(item[2], item[0][:10]))
         print(filepath)
         with open(filepath, 'w', encoding='UTF-8') as fw:
@@ -232,15 +240,25 @@ def save_files_proc():
 
 
 def save_files_views():
-    save_path = os.path.join(DIRNAME_BASE, DIRNAME_VIEWS)
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
     for item in get_views():
+        schema_name = item[2]
+
+        save_path = DIRNAME_BASE
+        if DIRNAME_BY_DBNAME.lower() == 'true':
+            save_path = os.path.join(save_path, DBNAME)
+        if DIRNAME_BY_SCHEMA.lower() == 'true':
+            save_path = os.path.join(save_path, schema_name)
+        save_path = os.path.join(save_path, DIRNAME_VIEWS)
+
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
         filepath = os.path.join(save_path, '{}.sql'.format(item[0]))
         print(filepath)
         with open(filepath, 'w', encoding='UTF-8') as fw:
             fw.write(item[1])
         #print(item)
+
 
 def save_files_tables():
     for item in get_tables():
@@ -263,27 +281,19 @@ def save_files_tables():
         #print(item[0], item[2])
 
 
-def main():
-    if not os.path.exists(DIRNAME_PROC):
-        os.makedirs(DIRNAME_PROC)
-    if not os.path.exists(DIRNAME_VIEWS):
-        os.makedirs(DIRNAME_VIEWS)
-
 def test():
     print(get_pg_version_full())
     print(get_pg_version_short())
     print(get_pg_version_major())
+    print(get_pg_server_encoding())  #UTF8
+
+
+def main():
+    save_files_proc()
+    save_files_views()
+    save_files_tables()
+
 
 if __name__ == '__main__':
-    #main()
+    main()
     #test()
-    #for item in get_proc():
-    #    print(item[2]+'_'+item[0])
-    #for item in get_views():
-    #    print(item)
-    #print(get_pg_server_encoding())  #UTF8
-
-    #print(get_tables())
-    #save_files_proc()
-    #save_files_views()
-    save_files_tables()
