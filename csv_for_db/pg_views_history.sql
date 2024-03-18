@@ -11,7 +11,8 @@ CREATE TABLE public.pg_views_history
   deleted boolean NOT NULL DEFAULT false,
   schemaname name,
   viewname name,
-  definition text
+  definition text,
+  description text
 );
 
 
@@ -22,4 +23,5 @@ COMMENT ON COLUMN public.pg_views_history.viewname IS 'Имя Представл
 COMMENT ON COLUMN public.pg_views_history.definition IS 'SQL Представления';
 COMMENT ON COLUMN public.pg_views_history.deleted IS 'Представление удалено';
 COMMENT ON COLUMN public.pg_views_history.addnew IS 'Представление добавлено';
+COMMENT ON COLUMN public.pg_views_history.description IS 'Описание';
 
