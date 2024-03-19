@@ -1,6 +1,6 @@
 """
     Скрипт создающий структуру каталогов и файлов в соответствии с БД
-    
+
     Настройки подключения к БД настраиваются в файле csv_pg_git_config.py
     Пример содержимого настроечного файла находится в csv_pg_git_config.py.sample
     После запуска скрипта создается каталог именем БД (если в настройках стоит DIRNAME_BY_DBNAME = True)
@@ -77,7 +77,6 @@ def get_pg_version_major(dbhost, dbport, dbname, dbuser, dbpasswor) -> int:
 
 def get_proc(dbhost, dbport, dbname, dbuser, dbpassword):
     with psycopg2.connect(f"host={dbhost} port={dbport} dbname={dbname} user={dbuser} password={dbpassword}") as conn:
-    #with psycopg2.connect(f"host={db['DBHOST']} port={db['DBPORT']} dbname={db['DBNAME']} user={db['DBUSER']} password={db['DBPASSWORD']}") as conn:
         if get_pg_version_major(dbhost, dbport, dbname, dbuser, dbpassword) <= 11:
             sql_not_aggregate = "    AND pr.proisagg = false "  # -- Для агрегатных ф-ций не работает получение sql pg_get_functiondef
         else:
@@ -98,7 +97,7 @@ LEFT JOIN pg_language l ON l.oid=pr.prolang
 WHERE n.nspname NOT IN ('pg_catalog', 'information_schema', 'cron')
     AND pr.proname<>'text_clear3'
     {}
---LIMIT 10     
+    
 """.format(sql_not_aggregate)
         cur.execute(sql)
         rows = cur.fetchall()
@@ -225,7 +224,8 @@ def save_files_proc():
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
 
-                filepath = os.path.join(save_path, '{}_[{}].sql'.format(item[2], item[0][:10]))
+                filename = f'{item[2]}_[{item[0][:10]}].sql'
+                filepath = os.path.join(save_path, filename)
                 print(filepath)
                 with open(filepath, 'w', encoding='UTF-8') as fw:
                     fw.write(item[3])
@@ -246,8 +246,8 @@ def save_files_views():
 
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
-
-                filepath = os.path.join(save_path, '{}.sql'.format(item[0]))
+                filename = f'{item[0]}.sql'
+                filepath = os.path.join(save_path, filename)
                 print(filepath)
                 with open(filepath, 'w', encoding='UTF-8') as fw:
                     fw.write(item[1])
@@ -269,7 +269,8 @@ def save_files_tables():
                 save_path = os.path.join(save_path, subdir)
                 if not os.path.exists(save_path):
                     os.makedirs(save_path)
-                filepath = os.path.join(save_path, '{}.sql'.format(item[0]))
+                filename = f'{item[0]}.sql'
+                filepath = os.path.join(save_path, filename)
                 print(filepath)
                 with open(filepath, 'w', encoding='UTF-8') as fw:
                     fw.write(item[1])
@@ -282,6 +283,7 @@ def test():
             print(get_pg_version_short(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))
             print(get_pg_version_major(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))
             print(get_pg_server_encoding(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))  #UTF8
+
     for db in DATABASES:
         if db['ENABLE']:
             print('Сервер БД: '+get_pg_version_full(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))
