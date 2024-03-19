@@ -6,11 +6,23 @@ os.environ['PG_GIT_DBUSER'] = 'dbuser'        # Пользователь
 os.environ['PG_GIT_DBPASS'] = 'dbpassword'    # Пароль
 os.environ['PG_GIT_DBPORT'] = '5432'          # Порт
 
-os.environ['PG_GIT_DIRNAME_BASE'] = ''                      # Базовая директория для хранения структуры файлов. '' - Директория с python-скриптом
-os.environ['PG_GIT_DIRNAME_PROC'] = 'pg_proc_history'       # Директория с файлами функций/процедурами
-os.environ['PG_GIT_DIRNAME_VIEWS'] = 'pg_views_history'     # Директория с файлами Представлений
-os.environ['PG_GIT_DIRNAME_TABLES'] = 'pg_tables_history'   # Директория с файлами структур таблиц
-os.environ['PG_GIT_DIRNAME_VIEWS_STRUCT'] = 'pg_views_struct_history' # Директория со файлами структур VIEWS
-os.environ['PG_GIT_DIRNAME_FOREIGN_TABLES'] = 'pg_ft_tables_history'  # Директория со файлами структур FOREIGN TABLE
-os.environ['PG_GIT_DIRNAME_BY_DBNAME'] = 'true'             # Создавать папку с именем БД внутри которой будут находиться файлы или папки
-os.environ['PG_GIT_DIRNAME_BY_SCHEMA'] = 'true'             # Создавать папки с именем схем в которых уже будут находиться файлы
+DIRNAME_BASE = ''                                # Базовая директория для хранения структуры файлов. '' - Директория с python-скриптом
+DIRNAME_PROC = 'pg_proc_history'                 # Директория с файлами функций/процедурами
+DIRNAME_VIEWS = 'pg_views_history'               # Директория с файлами Представлений
+DIRNAME_TABLES = 'pg_tables_history'             # Директория с файлами структур таблиц
+DIRNAME_VIEWS_STRUCT = 'pg_views_struct_history' # Директория со файлами структур VIEWS
+DIRNAME_FOREIGN_TABLES = 'pg_ft_tables_history'  # Директория со файлами структур FOREIGN TABLE
+DIRNAME_BY_DBNAME = True                         # Создавать папку с именем БД внутри которой будут находиться файлы или папки
+DIRNAME_BY_SCHEMA = True                         # Создавать папки с именем схем в которых уже будут находиться файлы
+
+DATABASES = [
+    {
+        'ENABLE': True,                              # Вкл/Выкл.
+        'DBHOST': os.environ['PG_GIT_DBHOST'],       # IP БД
+        'DBNAME': os.environ['PG_GIT_DBNAME'],       # Имя БД для подключения
+        'DBNAME_DIR': os.environ['PG_GIT_DBNAME'],   # Имя папки, если DIRNAME_BY_DBNAME = true
+        'DBUSER': os.environ['PG_GIT_DBUSER'],       # Имя пользователя БД
+        'DBPASSWORD': os.environ['PG_GIT_DBPASS'],   # Пароль БД
+        'DBPORT': os.getenv('PG_GIT_DBPORT', '5432') # Порт
+    },
+]

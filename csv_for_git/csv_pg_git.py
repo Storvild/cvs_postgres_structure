@@ -1,27 +1,13 @@
 import psycopg2
 import sys
 import os
-
+#import csv_pg_git_config
 try:
-    import csv_pg_git_config
+    #import csv_pg_git_config
+    from csv_pg_git_config import *
 except:
     raise Exception('Ошибка! Не найден файл pg_git_config.py. Пример содержимого в файле pg_git_config.py.sample')
 
-
-DIRNAME_BASE = os.getenv('PG_GIT_DIRNAME_BASE')  # Базовый путь к создаваемым файлам. '' - Текущая директория
-DIRNAME_PROC = os.getenv('PG_GIT_DIRNAME_PROC')
-DIRNAME_VIEWS = os.getenv('PG_GIT_DIRNAME_VIEWS')
-DIRNAME_TABLES = os.getenv('PG_GIT_DIRNAME_TABLES')
-DIRNAME_VIEWS_STRUCT = os.getenv('PG_GIT_DIRNAME_VIEWS_STRUCT')
-DIRNAME_FOREIGN_TABLES = os.getenv('PG_GIT_DIRNAME_FOREIGN_TABLES')
-DIRNAME_BY_DBNAME = os.getenv('PG_GIT_DIRNAME_BY_DBNAME')
-DIRNAME_BY_SCHEMA = os.getenv('PG_GIT_DIRNAME_BY_SCHEMA')
-
-DBHOST = os.getenv('PG_GIT_DBHOST')
-DBNAME = os.getenv('PG_GIT_DBNAME')
-DBUSER = os.getenv('PG_GIT_DBUSER')
-DBPASS = os.getenv('PG_GIT_DBPASS')
-DBPORT = os.getenv('PG_GIT_DBPORT')
 
 # Если указана директория, то устанавливаем ее как текущую, иначе текущей становится директория где лежит py скрипт
 if DIRNAME_BASE:
@@ -33,8 +19,8 @@ print(f'Python: {sys.version}')
 #print(f'Версия libpq: {psycopg2.__libpq_version__}')
 
 
-def get_pg_server_encoding() -> str:
-    with psycopg2.connect(f'host={DBHOST} port={DBPORT} dbname={DBNAME} user={DBUSER} password={DBPASS}') as conn:
+def get_pg_server_encoding(dbhost, dbport, dbname, dbuser, dbpassword) -> str:
+    with psycopg2.connect(f'host={dbhost} port={dbport} dbname={dbname} user={dbuser} password={dbpassword}') as conn:
         cur = conn.cursor()
         sql = 'SHOW server_encoding;'
         cur.execute(sql)
@@ -43,12 +29,12 @@ def get_pg_server_encoding() -> str:
         return ver
 
 
-def get_pg_version_full() -> str:
+def get_pg_version_full(dbhost, dbport, dbname, dbuser, dbpassword) -> str:
     """
     Получение полной версии Postgres
     :return: PostgreSQL 9.6.3 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit
     """
-    with psycopg2.connect(f'host={DBHOST} port={DBPORT} dbname={DBNAME} user={DBUSER} password={DBPASS}') as conn:
+    with psycopg2.connect(f'host={dbhost} port={dbport} dbname={dbname} user={dbuser} password={dbpassword}') as conn:
         cur = conn.cursor()
         sql = 'SELECT version()'
         cur.execute(sql)
@@ -57,29 +43,30 @@ def get_pg_version_full() -> str:
         return ver
 
 
-def get_pg_version_short() -> str:
+def get_pg_version_short(dbhost, dbport, dbname, dbuser, dbpassword) -> str:
     """
      Получение номера версии Postgres
      :return: 9.6.3
      """
-    ver = get_pg_version_full()
+    ver = get_pg_version_full(dbhost, dbport, dbname, dbuser, dbpassword)
     return ver.split()[1]
 
 
-def get_pg_version_major() -> int:
+def get_pg_version_major(dbhost, dbport, dbname, dbuser, dbpasswor) -> int:
     """
      Получение мажорной версии Postgres в int
      :return: 9
      """
-    ver = get_pg_version_full()
+    ver = get_pg_version_full(dbhost, dbport, dbname, dbuser, dbpasswor)
     ver = ver.split(' ')[1]
     ver = int(ver.split('.')[0])
     return ver
 
 
-def get_proc():
-    with psycopg2.connect(f'host={DBHOST} port={DBPORT} dbname={DBNAME} user={DBUSER} password={DBPASS}') as conn:
-        if get_pg_version_major() <= 11:
+def get_proc(dbhost, dbport, dbname, dbuser, dbpassword):
+    with psycopg2.connect(f"host={dbhost} port={dbport} dbname={dbname} user={dbuser} password={dbpassword}") as conn:
+    #with psycopg2.connect(f"host={db['DBHOST']} port={db['DBPORT']} dbname={db['DBNAME']} user={db['DBUSER']} password={db['DBPASSWORD']}") as conn:
+        if get_pg_version_major(dbhost, dbport, dbname, dbuser, dbpassword) <= 11:
             sql_not_aggregate = "    AND pr.proisagg = false "  # -- Для агрегатных ф-ций не работает получение sql pg_get_functiondef
         else:
             sql_not_aggregate = "    AND pr.prokind <> 'a' "  # -- С Postgres 11 вместо признака proisagg=true появился prokind='a'
@@ -106,8 +93,8 @@ WHERE n.nspname NOT IN ('pg_catalog', 'information_schema', 'cron')
         return rows
 
 
-def get_views():
-    with psycopg2.connect(f'host={DBHOST} port={DBPORT} dbname={DBNAME} user={DBUSER} password={DBPASS}') as conn:
+def get_views(dbhost, dbport, dbname, dbuser, dbpassword):
+    with psycopg2.connect(f"host={dbhost} port={dbport} dbname={dbname} user={dbuser} password={dbpassword}") as conn:
         cur = conn.cursor()
         sql = """
 SELECT trim(table_schema||'.'||table_name) AS code
@@ -123,9 +110,9 @@ WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
         return rows
 
 
-def get_tables():
-    with psycopg2.connect(f'host={DBHOST} port={DBPORT} dbname={DBNAME} user={DBUSER} password={DBPASS}') as conn:
-        if get_pg_version_major() <= 11:
+def get_tables(dbhost, dbport, dbname, dbuser, dbpassword):
+    with psycopg2.connect(f"host={dbhost} port={dbport} dbname={dbname} user={dbuser} password={dbpassword}") as conn:
+        if get_pg_version_major(dbhost, dbport, dbname, dbuser, dbpassword) <= 11:
             sql_relhasoids = "        , c.relhasoids"
         else:
             sql_relhasoids = "        , false AS relhasoids"
@@ -212,78 +199,94 @@ ORDER BY m.schema_name, m.relkind, m.table_name
 
 
 def save_files_proc():
-    for item in get_proc():
-        schema_name = item[4]
-        save_path = DIRNAME_BASE
-        if DIRNAME_BY_DBNAME.lower() == 'true':
-            save_path = os.path.join(save_path, DBNAME)
-        if DIRNAME_BY_SCHEMA.lower() == 'true':
-            save_path = os.path.join(save_path, schema_name)
-        save_path = os.path.join(save_path, DIRNAME_PROC)
+    for db in DATABASES:
+        if db['ENABLE']:
+            for item in get_proc(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']):
+                schema_name = item[4]
+                save_path = DIRNAME_BASE
+                if DIRNAME_BY_DBNAME:
+                    save_path = os.path.join(save_path, db['DBNAME_DIR'])
+                if DIRNAME_BY_SCHEMA:
+                    save_path = os.path.join(save_path, schema_name)
+                save_path = os.path.join(save_path, DIRNAME_PROC)
 
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+                if not os.path.exists(save_path):
+                    os.makedirs(save_path)
 
-        filepath = os.path.join(save_path, '{}_[{}].sql'.format(item[2], item[0][:10]))
-        print(filepath)
-        with open(filepath, 'w', encoding='UTF-8') as fw:
-            fw.write(item[3])
-        #print(item)
+                filepath = os.path.join(save_path, '{}_[{}].sql'.format(item[2], item[0][:10]))
+                print(filepath)
+                with open(filepath, 'w', encoding='UTF-8') as fw:
+                    fw.write(item[3])
 
 
 def save_files_views():
-    for item in get_views():
-        schema_name = item[2]
+    for db in DATABASES:
+        if db['ENABLE']:
+            for item in get_views(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']):
+                schema_name = item[2]
 
-        save_path = DIRNAME_BASE
-        if DIRNAME_BY_DBNAME.lower() == 'true':
-            save_path = os.path.join(save_path, DBNAME)
-        if DIRNAME_BY_SCHEMA.lower() == 'true':
-            save_path = os.path.join(save_path, schema_name)
-        save_path = os.path.join(save_path, DIRNAME_VIEWS)
+                save_path = DIRNAME_BASE
+                if DIRNAME_BY_DBNAME:
+                    save_path = os.path.join(save_path, db['DBNAME_DIR'])
+                if DIRNAME_BY_SCHEMA:
+                    save_path = os.path.join(save_path, schema_name)
+                save_path = os.path.join(save_path, DIRNAME_VIEWS)
 
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+                if not os.path.exists(save_path):
+                    os.makedirs(save_path)
 
-        filepath = os.path.join(save_path, '{}.sql'.format(item[0]))
-        print(filepath)
-        with open(filepath, 'w', encoding='UTF-8') as fw:
-            fw.write(item[1])
-        #print(item)
+                filepath = os.path.join(save_path, '{}.sql'.format(item[0]))
+                print(filepath)
+                with open(filepath, 'w', encoding='UTF-8') as fw:
+                    fw.write(item[1])
 
 
 def save_files_tables():
-    for item in get_tables():
-        dir_relkind = {'r': DIRNAME_TABLES, 'v': DIRNAME_VIEWS_STRUCT, 'f': DIRNAME_FOREIGN_TABLES}
-        relkind = item[2]
-        schema_name = item[3]
-        subdir = dir_relkind[relkind]
-        save_path = DIRNAME_BASE
-        if DIRNAME_BY_DBNAME.lower() == 'true':
-            save_path = os.path.join(save_path, DBNAME)
-        if DIRNAME_BY_SCHEMA.lower() == 'true':
-            save_path = os.path.join(save_path, schema_name)
-        save_path = os.path.join(save_path, subdir)
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-        filepath = os.path.join(save_path, '{}.sql'.format(item[0]))
-        print(filepath)
-        with open(filepath, 'w', encoding='UTF-8') as fw:
-            fw.write(item[1])
-        #print(item[0], item[2])
+    for db in DATABASES:
+        if db['ENABLE']:
+            for item in get_tables(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']):
+                dir_relkind = {'r': DIRNAME_TABLES, 'v': DIRNAME_VIEWS_STRUCT, 'f': DIRNAME_FOREIGN_TABLES}
+                relkind = item[2]
+                schema_name = item[3]
+                subdir = dir_relkind[relkind]
+                save_path = DIRNAME_BASE
+                if DIRNAME_BY_DBNAME:
+                    save_path = os.path.join(save_path, db['DBNAME_DIR'])
+                if DIRNAME_BY_SCHEMA:
+                    save_path = os.path.join(save_path, schema_name)
+                save_path = os.path.join(save_path, subdir)
+                if not os.path.exists(save_path):
+                    os.makedirs(save_path)
+                filepath = os.path.join(save_path, '{}.sql'.format(item[0]))
+                print(filepath)
+                with open(filepath, 'w', encoding='UTF-8') as fw:
+                    fw.write(item[1])
 
 
 def test():
-    print(get_pg_version_full())
-    print(get_pg_version_short())
-    print(get_pg_version_major())
-    print(get_pg_server_encoding())  #UTF8
-    for item in get_views():
-        print(item)
-    for item in get_proc():
-        print(item)
-    for item in get_tables():
-        print(item)
+    for db in DATABASES:
+        if db['ENABLE']:
+            print(get_pg_version_full(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))
+            print(get_pg_version_short(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))
+            print(get_pg_version_major(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))
+            print(get_pg_server_encoding(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))  #UTF8
+    for db in DATABASES:
+        if db['ENABLE']:
+            print('Сервер БД: '+get_pg_version_full(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']))
+            print('Представления (Views):')
+            print(db['DBNAME_DIR'])
+            for item in get_views(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']):
+                print(item[0])
+
+            print('Функции:')
+            print(db['DBNAME_DIR'])
+            for item in get_proc(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']):
+                print(item[0])
+
+            print('Таблицы:')
+            print(db['DBNAME_DIR'])
+            for item in get_tables(db['DBHOST'], db['DBPORT'], db['DBNAME'], db['DBUSER'], db['DBPASSWORD']):
+                print(item[0])
 
 
 def main():
