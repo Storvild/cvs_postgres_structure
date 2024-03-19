@@ -56,7 +56,8 @@ BEGIN
             , ft.ftoptions
             , ft.servername
             , pn.nspname||'.'||parent.relname AS inhtable
-            , c.relhasoids -- После версии 10
+            , c.relhasoids -- Для версии Postgres <=11. После версии 11 поля relhasoids нет
+            -- , false AS relhasoids -- Для версии Postgres >=12
             --, c.relhaspkey
             --, c.relchecks
             --, lag(adesc.description) OVER() AS prev_att_desc

@@ -8,14 +8,6 @@ except:
     raise Exception('Ошибка! Не найден файл pg_git_config.py. Пример содержимого в файле pg_git_config.py.sample')
 
 
-#for key, val in os.environ.items():
-#    print(key, val)
-#print(os.getenv('TEMP', '<empty>'))
-#os.environ['PG_GIT_DBNAME'] = 'btkbase'
-
-#print(os.environ.get('PG_GIT_DBNAME'))
-
-
 DIRNAME_BASE = os.getenv('PG_GIT_DIRNAME_BASE')  # Базовый путь к создаваемым файлам. '' - Текущая директория
 DIRNAME_PROC = os.getenv('PG_GIT_DIRNAME_PROC')
 DIRNAME_VIEWS = os.getenv('PG_GIT_DIRNAME_VIEWS')
@@ -50,6 +42,7 @@ def get_pg_server_encoding() -> str:
         ver = ver_[0]
         return ver
 
+
 def get_pg_version_full() -> str:
     """
     Получение полной версии Postgres
@@ -63,6 +56,7 @@ def get_pg_version_full() -> str:
         ver = ver_[0]
         return ver
 
+
 def get_pg_version_short() -> str:
     """
      Получение номера версии Postgres
@@ -70,6 +64,7 @@ def get_pg_version_short() -> str:
      """
     ver = get_pg_version_full()
     return ver.split()[1]
+
 
 def get_pg_version_major() -> int:
     """
@@ -113,10 +108,6 @@ WHERE n.nspname NOT IN ('pg_catalog', 'information_schema', 'cron')
 
 def get_views():
     with psycopg2.connect(f'host={DBHOST} port={DBPORT} dbname={DBNAME} user={DBUSER} password={DBPASS}') as conn:
-        if get_pg_version_major() <= 11:
-            sql_not_aggregate = "    AND pr.proisagg = false "  # -- Для агрегатных ф-ций не работает получение sql pg_get_functiondef
-        else:
-            sql_not_aggregate = "    AND pr.prokind <> 'a' "  # -- С Postgres 11 вместо признака proisagg=true появился prokind='a'
         cur = conn.cursor()
         sql = """
 SELECT trim(table_schema||'.'||table_name) AS code
@@ -126,17 +117,18 @@ SELECT trim(table_schema||'.'||table_name) AS code
     --, view_definition AS definition
 FROM information_schema.views
 WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
-""".format(sql_not_aggregate)
+"""
         cur.execute(sql)
         rows = cur.fetchall()
         return rows
 
+
 def get_tables():
     with psycopg2.connect(f'host={DBHOST} port={DBPORT} dbname={DBNAME} user={DBUSER} password={DBPASS}') as conn:
         if get_pg_version_major() <= 11:
-            sql_not_aggregate = "    AND pr.proisagg = false "  # -- Для агрегатных ф-ций не работает получение sql pg_get_functiondef
+            sql_relhasoids = "        , c.relhasoids"
         else:
-            sql_not_aggregate = "    AND pr.prokind <> 'a' "  # -- С Postgres 11 вместо признака proisagg=true появился prokind='a'
+            sql_relhasoids = "        , false AS relhasoids"
         cur = conn.cursor()
         sql = """
 WITH 
@@ -170,12 +162,12 @@ ftoptions AS (
         , ft.ftoptions
         , ft.servername
         , pn.nspname||'.'||parent.relname AS inhtable
-        , c.relhasoids -- После версии 10
+        {}  -- С 12 версии поля c.relhasoids нет
         --, c.relhaspkey
-        , c.relchecks
+        --, c.relchecks
     FROM pg_class c 
     LEFT JOIN pg_namespace n ON n.oid=c.relnamespace
-    INNER JOIN information_schema.tables m ON m.table_name=c.relname AND m.table_schema=n.nspname --26681
+    INNER JOIN information_schema.tables m ON m.table_name=c.relname AND m.table_schema=n.nspname
     LEFT JOIN pg_attribute a ON a.attrelid = c.oid
     LEFT JOIN pg_type t ON a.atttypid = t.oid
     LEFT JOIN pg_attrdef def ON def.adnum=a.attnum AND def.adrelid=c.oid
@@ -188,9 +180,9 @@ ftoptions AS (
     WHERE true
         AND a.atttypid>0
         AND a.attnum > 0
-        AND c.relkind IN ('r','v','f') --AND c.relkind NOT IN('r','v','f') --f-foreign table, r-table, v-view ('r','v')
+        AND c.relkind IN ('r','v','f') --AND c.relkind IN('r','v','f') --f-foreign table, r-table, v-view
         AND n.nspname NOT IN ('information_schema', 'pg_catalog') --cron
-        --AND (n.nspname, c.relname) IN (SELECT table_schema, table_name FROM information_schema.tables)--28857
+        --AND (n.nspname, c.relname) IN (SELECT table_schema, table_name FROM information_schema.tables)
     ORDER BY n.nspname, c.relname, a.attnum
 )
 SELECT 
@@ -203,7 +195,7 @@ SELECT
       || string_agg('    '||m.column_name||' '||m.column_type||COALESCE(' '||m.not_null,'')||COALESCE(' '||m.default_value,''), ','||chr(10) ORDER BY m.attnum)
       ||chr(10)||')' 
       ||COALESCE(chr(10)||'INHERITS ('||m.inhtable||')', '')
-      ||CASE WHEN m.relhasoids THEN chr(10)||'WITH (OIDS=TRUE)' ELSE '' END --После версии 10
+      ||CASE WHEN m.relhasoids THEN chr(10)||'WITH (OIDS=TRUE)' ELSE '' END --После версии 11 нет поля relhasoids
       ||chr(10)||';'
       AS sql_create
     , m.relkind
@@ -211,9 +203,9 @@ SELECT
     , m.table_name
 FROM cols m
 GROUP BY schema_name, table_name, m.inhtable, m.relkind
-        , m.relhasoids -- После версии 10
+        , m.relhasoids -- После версии 11 нет поля relhasoids
 ORDER BY m.schema_name, m.relkind, m.table_name        
-""".format(sql_not_aggregate)
+""".format(sql_relhasoids)
         cur.execute(sql)
         rows = cur.fetchall()
         return rows

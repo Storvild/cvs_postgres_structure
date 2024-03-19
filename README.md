@@ -10,6 +10,9 @@
 - **pg_views_history.sql** - Создает таблицу public.pg_views_history для хранения Представлений (Views)
 - **pg_views_history_sync.sql** - Создание функции public.pg_views_history_sync() которая при запуске анализирует различия с 
 более ранними версиями и добавляет в таблицу public.pg_views_history изменившиеся записи
+- **pg_table_history.sql** - Создает таблицу public.pg_views_history для хранения структур Таблиц
+- **pg_table_history_sync.sql** - Создание функции public.pg_table_history_sync() которая при запуске анализирует различия с 
+более ранними версиями и добавляет в таблицу public.pg_table_history изменившиеся записи
 
 ### Основные поля таблиц:
 - **uid** - уникальный идентификатор в пределах таблицы
