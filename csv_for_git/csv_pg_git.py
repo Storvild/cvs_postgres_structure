@@ -1,9 +1,21 @@
+"""
+    Скрипт создающий структуру каталогов и файлов в соответствии с БД
+    
+    Настройки подключения к БД настраиваются в файле csv_pg_git_config.py
+    Пример содержимого настроечного файла находится в csv_pg_git_config.py.sample
+    После запуска скрипта создается каталог именем БД (если в настройках стоит DIRNAME_BY_DBNAME = True)
+        Внутри создаются каталоги с именами схем БД (если в настройках стоит DIRNAME_BY_SCHEMA = True)
+        Далее создаются каталоги для хранения файлов со структурами  таблиц, Views, функций
+        (имена каталогов также настраиваются в конфигурационном файле).
+
+    @author: Vadim_S
+    @license:  MIT License
+"""
 import psycopg2
 import sys
 import os
-#import csv_pg_git_config
+
 try:
-    #import csv_pg_git_config
     from csv_pg_git_config import *
 except:
     raise Exception('Ошибка! Не найден файл pg_git_config.py. Пример содержимого в файле pg_git_config.py.sample')

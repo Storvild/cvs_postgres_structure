@@ -20,7 +20,7 @@ DATABASES = [
         'ENABLE': True,                              # Вкл/Выкл.
         'DBHOST': os.environ['PG_GIT_DBHOST'],       # IP БД
         'DBNAME': os.environ['PG_GIT_DBNAME'],       # Имя БД для подключения
-        'DBNAME_DIR': os.environ['PG_GIT_DBNAME'],   # Имя папки, если DIRNAME_BY_DBNAME = true
+        'DBNAME_DIR': 'DBNAME_DIR': f"{os.environ['PG_GIT_DBNAME']} ({os.environ['PG_GIT_DBHOST']})",   # Имя папки, если DIRNAME_BY_DBNAME = true
         'DBUSER': os.environ['PG_GIT_DBUSER'],       # Имя пользователя БД
         'DBPASSWORD': os.environ['PG_GIT_DBPASS'],   # Пароль БД
         'DBPORT': os.getenv('PG_GIT_DBPORT', '5432') # Порт
